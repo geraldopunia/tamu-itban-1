@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Sistem Daftar Hadir</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo-container">
+                    <img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="logo-placeholder" style="display:none"><i class="fas fa-building"></i></div>
+                </div>
+                <div class="brand-text">
+                    <h1>Admin Dashboard</h1>
+                    <span>Provinsi Nusa Tenggara Barat</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <div class="datetime-display">
+                    <div class="date-display" id="date-display"></div>
+                    <div class="time-display" id="time-display"></div>
+                </div>
+                <button class="theme-toggle" id="theme-toggle" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-badge">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin</span>
+                </div>
+                <a href="login.html" class="btn btn-outline btn-sm" id="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Keluar
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Dashboard Admin</h2>
+            <p>Kelola data tamu, pencarian, dan ekspor data kunjungan</p>
+        </div>
+    </section>
+
+    <main class="container">
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2)">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-total-hari">0</h3>
+                        <p>Total Tamu Hari Ini</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c)">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-total-semua">0</h3>
+                        <p>Total Seluruh Tamu</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe)">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-instansi">0</h3>
+                        <p>Jumlah Instansi</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="chart-section">
+            <div class="glass-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-bar"></i> Statistik Kunjungan</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="visit-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> Daftar Tamu</h2>
+                    <div class="card-header-actions">
+                        <button class="btn btn-outline" id="export-csv" title="Export CSV">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </button>
+                        <button class="btn btn-outline" id="export-pdf" title="Export PDF">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-outline" id="print-btn" title="Cetak">
+                            <i class="fas fa-print"></i> Cetak
+                        </button>
+                        <button class="btn btn-danger" id="clear-all-btn" title="Hapus Semua">
+                            <i class="fas fa-trash"></i> Hapus Semua
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-container">
+                    <div class="filter-group">
+                        <label><i class="fas fa-calendar"></i> Dari:</label>
+                        <input type="date" id="filter-date-from">
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-calendar"></i> Sampai:</label>
+                        <input type="date" id="filter-date-to">
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-tag"></i> Status:</label>
+                        <select id="filter-status">
+                            <option value="">Semua Status</option>
+                            <option value="diterima">Diterima</option>
+                            <option value="menunggu">Menunggu</option>
+                            <option value="ditolak">Ditolak</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="filter-reset">
+                        <i class="fas fa-times"></i> Reset
+                    </button>
+                </div>
+
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Cari berdasarkan nama, instansi, atau tujuan...">
+                        <button class="search-clear" id="search-clear" style="display:none">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table" id="guest-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>Instansi</th>
+                                <th>Jabatan</th>
+                                <th>No HP</th>
+                                <th>Email</th>
+                                <th>Bertemu</th>
+                                <th>Keperluan</th>
+                                <th>Jumlah</th>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guest-tbody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="empty-state" id="empty-state" style="display:none">
+                    <i class="fas fa-inbox"></i>
+                    <p>Belum ada data tamu</p>
+                </div>
+
+                <div class="pagination-container" id="pagination-container">
+                    <div class="pagination-info" id="pagination-info"></div>
+                    <div class="pagination-controls" id="pagination-controls"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Edit Data Tamu</h3>
+                <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="edit-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-nama">Nama Lengkap</label>
+                        <input type="text" id="edit-nama">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-instansi">Instansi/Perusahaan</label>
+                        <input type="text" id="edit-instansi">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-jabatan">Jabatan</label>
+                        <input type="text" id="edit-jabatan">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-nohp">Nomor HP</label>
+                        <input type="tel" id="edit-nohp">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-email">Email</label>
+                        <input type="email" id="edit-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bertemu">Bertemu Dengan</label>
+                        <input type="text" id="edit-bertemu">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-keperluan">Keperluan</label>
+                        <input type="text" id="edit-keperluan" placeholder="Pilih atau ketik keperluan" list="edit-keperluan-list" autocomplete="off">
+                        <datalist id="edit-keperluan-list">
+                            <option value="Rapat">
+                            <option value="Konsultasi">
+                            <option value="Koordinasi">
+                            <option value="Presentasi">
+                            <option value="Penyerahan Dokumen">
+                            <option value="Pengaduan">
+                            <option value="Undangan">
+                            <option value="Kunjungan Kerja">
+                            <option value="Lainnya">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-jumlah">Jumlah Tamu</label>
+                        <input type="number" id="edit-jumlah" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-status">Status</label>
+                        <select id="edit-status">
+                            <option value="diterima">Diterima</option>
+                            <option value="menunggu">Menunggu</option>
+                            <option value="ditolak">Ditolak</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="modal-cancel">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-id-card"></i> Detail Tamu</h3>
+                <button class="modal-close" id="detail-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="detail-content" id="detail-content"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="detail-close-btn">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="qr-modal">
+        <div class="modal glass-card" style="max-width:350px; text-align:center;">
+            <div class="modal-header">
+                <h3><i class="fas fa-qrcode"></i> QR Code Tamu</h3>
+                <button class="modal-close" id="qr-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="qr-content" id="qr-content" style="padding:20px;"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="qr-close-btn">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="history-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-history"></i> Riwayat Kunjungan</h3>
+                <button class="modal-close" id="history-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="detail-content" id="history-content"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="history-close-btn">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal glass-card confirm-modal">
+            <div class="confirm-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 id="confirm-title">Konfirmasi</h3>
+            <p id="confirm-message">Apakah Anda yakin?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="confirm-cancel">Batal</button>
+                <button class="btn btn-danger" id="confirm-ok">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="preview-modal">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-eye"></i> Preview Cetak</h3>
+                <button class="modal-close" id="preview-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="detail-content" id="preview-content"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="preview-close-btn">Batal</button>
+                <button class="btn btn-primary" id="preview-print-btn"><i class="fas fa-print"></i> Cetak</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <button class="scroll-top" id="scroll-top" title="Kembali ke atas">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="shared.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

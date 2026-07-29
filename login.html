@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Daftar Hadir</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p>Memuat sistem...</p>
+        </div>
+    </div>
+
+    <div class="login-page">
+        <div class="login-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+
+        <div class="login-container">
+            <div class="login-card glass-card">
+                <div class="login-header">
+                    <div class="login-logo">
+                        <img src="assets/logo.png" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="logo-placeholder" style="display:none"><i class="fas fa-building"></i></div>
+                    </div>
+                    <h1>Daftar Hadir Tamu</h1>
+                    <p>ITBAN I</p>
+                </div>
+
+                <div class="login-tabs">
+                    <button class="login-tab active" data-tab="admin">
+                        <i class="fas fa-user-shield"></i> Admin
+                    </button>
+                    <button class="login-tab" data-tab="tamu">
+                        <i class="fas fa-user"></i> Tamu
+                    </button>
+                </div>
+
+                <div class="login-tab-content active" id="tab-admin">
+                    <form id="admin-login-form">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Username</label>
+                            <input type="text" id="admin-username" placeholder="Masukkan username" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-lock"></i> Password</label>
+                            <div class="password-field">
+                                <input type="password" id="admin-password" placeholder="Masukkan password">
+                                <button type="button" class="toggle-password" data-target="admin-password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="password-strength">
+                                <div class="strength-bar" id="strength-bar"></div>
+                            </div>
+                            <small class="strength-text" id="strength-text"></small>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-sign-in-alt"></i> Masuk sebagai Admin
+                        </button>
+                    </form>
+                </div>
+
+                <div class="login-tab-content" id="tab-tamu">
+                    <div class="guest-welcome">
+                        <div class="guest-icon">
+                            <i class="fas fa-hand-sparkles"></i>
+                        </div>
+                        <h3>Selamat Datang, Tamu!</h3>
+                        <p>Anda akan mengisi form daftar hadir untuk kunjungan</p>
+                    </div>
+                    <a href="tamu.html" class="btn btn-primary btn-block">
+                        <i class="fas fa-arrow-right"></i> Masuk ke Form Daftar Hadir
+                    </a>
+                </div>
+
+                <div class="login-footer">
+                    <div class="datetime-display">
+                        <div class="date-display" id="date-display"></div>
+                        <div class="time-display" id="time-display"></div>
+                    </div>
+                    <button class="theme-toggle" id="theme-toggle" title="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="shared.js"></script>
+    <script src="login.js"></script>
+</body>
+</html>
